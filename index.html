@@ -440,15 +440,10 @@
               <!-- Frame 2147238594 -->
               <div class="box-hugh-grow row-gap10-middle">
                 <!-- Frame 2147239893 -->
-                <div class="rolling-row">
-                  <div class="rolling-text-wrapper">
-                    <span class="rolling-msg active">삭제중이에요</span>
-                    <span class="rolling-msg">화면을 벗어나도 계속 진행돼요.</span>
-                    <span class="rolling-msg">파일 갯수나 크기에 따라 시간이 소요될 수 있어요.</span>
-                  </div>
-                  <span class="dot-loader" aria-hidden="true">
-                    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-                  </span>
+                <div class="rolling-text-wrapper">
+                  <span class="rolling-msg active">삭제중이에요<span class="dot-loader" aria-hidden="true"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></span>
+                  <span class="rolling-msg">화면을 벗어나도 계속 진행돼요.<span class="dot-loader" aria-hidden="true"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></span>
+                  <span class="rolling-msg">파일 갯수나 크기에 따라 시간이 소요될 수 있어요.<span class="dot-loader" aria-hidden="true"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></span>
                 </div>
               </div>
             </div>
@@ -574,15 +569,7 @@
   </div>
 
   <style>
-    /* ── rolling row: text + dots 한 줄 flex ── */
-    .rolling-row {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 6px;
-    }
-
-    /* ── rolling text: CSS Grid 겹침으로 자연스러운 너비 확보 ── */
+    /* ── rolling text: CSS Grid 겹침 ── */
     .rolling-text-wrapper {
       display: grid;
       align-items: center;
@@ -590,6 +577,9 @@
     }
     .rolling-msg {
       grid-area: 1 / 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       opacity: 0;
       white-space: nowrap;
       font-size: 14px;
@@ -608,12 +598,12 @@
     .dot-loader {
       display: inline-flex;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       flex-shrink: 0;
     }
     .dot {
-      width: 4px;
-      height: 4px;
+      width: 2px;
+      height: 2px;
       border-radius: 50%;
       background: #595959;
       opacity: 0;
@@ -625,9 +615,9 @@
 
     @keyframes dotAppear {
       0%   { opacity: 0;   transform: scale(1); }
-      15%  { opacity: 1;   transform: scale(1.25); }
-      40%  { opacity: 1;   transform: scale(1); }
-      60%  { opacity: 0;   transform: scale(1); }
+      20%  { opacity: 1;   transform: scale(1.5); }
+      45%  { opacity: 1;   transform: scale(1); }
+      65%  { opacity: 0;   transform: scale(1); }
       100% { opacity: 0;   transform: scale(1); }
     }
   </style>
@@ -641,6 +631,14 @@
       function roll() {
         msgs[current].classList.remove('active');
         current = (current + 1) % msgs.length;
+
+        /* 점 애니메이션 리셋: 텍스트 등장 시 항상 처음부터 재생 */
+        msgs[current].querySelectorAll('.dot').forEach(function (d) {
+          d.style.animation = 'none';
+          d.offsetHeight;
+          d.style.animation = '';
+        });
+
         msgs[current].classList.add('active');
         setTimeout(roll, DISPLAY + FADE);
       }
