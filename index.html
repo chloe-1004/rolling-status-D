@@ -441,11 +441,8 @@
                   </svg>
                   <div class="box-auto text12-center-gray900s">새로고침</div>
                 </div>
-                <div class="fade-text-wrap" style="position:relative;">
-                  <span class="fade-text fade-text-a text14-bold" style="display:inline-block;">삭제중이에요</span>
-                  <span class="fade-text fade-text-b text14-bold" style="position:absolute;left:0;top:0;opacity:0;white-space:nowrap;">화면을 벗어나도 계속 진행돼요.</span>
-                </div>
-                <span class="dot-loader" aria-hidden="true">
+                <span id="typeText" class="text14-bold" style="white-space:nowrap;"></span>
+                <span class="dot-loader" id="dotLoader" aria-hidden="true" style="visibility:hidden;">
                   <span class="dot"></span><span class="dot"></span><span class="dot"></span>
                 </span>
               </div>
@@ -572,27 +569,19 @@
   </div>
 
   <style>
-    /* ── fade-text rolling ── */
-    .fade-text-wrap { display: inline-block; position: relative; }
-    .fade-text {
-      transition: opacity 0.45s ease;
-    }
-    .fade-text-b { pointer-events: none; }
-
     /* ── bouncing dots ── */
     .dot-loader {
       display: inline-flex;
-      align-items: flex-end;
+      align-items: center;
       gap: 2px;
-      margin-left: 2px;
-      height: 14px;
+      margin-left: 3px;
       vertical-align: middle;
     }
     .dot {
       width: 3px;
       height: 3px;
       border-radius: 50%;
-      background: var(--GRAY900S, #191919);
+      background: #d9d9d9;
       animation: dotBounce 1.2s ease-in-out infinite;
     }
     .dot:nth-child(1) { animation-delay: 0s; }
@@ -601,39 +590,47 @@
 
     @keyframes dotBounce {
       0%, 60%, 100% { transform: translateY(0); }
-      30%            { transform: translateY(-5px); }
+      30%            { transform: translateY(-4px); }
     }
+
+    /* typeText와 dot-loader 수직 정렬 */
+    #typeText   { vertical-align: middle; line-height: 1; }
+    #dotLoader  { vertical-align: middle; }
   </style>
   <script>
     (function () {
-      var a = document.querySelector('.fade-text-a');
-      var b = document.querySelector('.fade-text-b');
-      var showingA = true;
-      var HOLD = 2800;
-      var wrap = document.querySelector('.fade-text-wrap');
+      var textEl  = document.getElementById('typeText');
+      var dotsEl  = document.getElementById('dotLoader');
+      var msgs    = ['삭제중이에요', '화면을 벗어나도 계속 진행돼요.'];
+      var msgIdx  = 0;
+      var CHAR_SPEED = 55;   // ms per character
+      var HOLD       = 5800; // ms to hold after typing complete (기존 2.8s + 3s)
+      var CLEAR_PAUSE = 180; // ms pause before typing next
 
-      function swap() {
-        if (showingA) {
-          // b의 실제 너비를 미리 맞추기 위해 wrap width 고정
-          wrap.style.width = wrap.offsetWidth + 'px';
-          a.style.opacity = '0';
-          b.style.opacity = '1';
-          // transition 끝난 후 a를 숨기고 wrap width 해제
-          setTimeout(function () {
-            wrap.style.width = b.offsetWidth + 'px';
-          }, 450);
-        } else {
-          wrap.style.width = wrap.offsetWidth + 'px';
-          b.style.opacity = '0';
-          a.style.opacity = '1';
-          setTimeout(function () {
-            wrap.style.width = a.offsetWidth + 'px';
-          }, 450);
-        }
-        showingA = !showingA;
+      function typeNext() {
+        var msg = msgs[msgIdx];
+        var i = 0;
+        textEl.textContent = '';
+        dotsEl.style.visibility = 'hidden';
+
+        (function tick() {
+          if (i < msg.length) {
+            textEl.textContent = msg.slice(0, ++i);
+            setTimeout(tick, CHAR_SPEED);
+          } else {
+            // 타이핑 완료 → 점 표시
+            dotsEl.style.visibility = 'visible';
+            setTimeout(function () {
+              dotsEl.style.visibility = 'hidden';
+              textEl.textContent = '';
+              msgIdx = (msgIdx + 1) % msgs.length;
+              setTimeout(typeNext, CLEAR_PAUSE);
+            }, HOLD);
+          }
+        })();
       }
 
-      setInterval(swap, HOLD);
+      typeNext();
     })();
   </script>
 </body>
