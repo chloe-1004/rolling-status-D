@@ -568,29 +568,43 @@
   </div>
 
   <style>
-    /* ── rolling text: CSS Grid 겹침 ── */
+    /* ── rolling text: 위로 슬라이드 ticker ── */
     .rolling-text-wrapper {
-      display: grid;
-      align-items: center;
+      position: relative;
+      overflow: hidden;
       height: 20px;
+      display: flex;
+      align-items: center;
     }
     .rolling-msg {
-      grid-area: 1 / 1;
+      position: absolute;
+      top: 0;
+      left: 0;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      opacity: 0;
       white-space: nowrap;
       font-size: 14px;
       font-family: 'Noto Sans KR', 'Noto Sans KR', sans-serif;
       font-weight: 400;
       color: #595959;
       line-height: 20px;
-      transition: opacity 0.5s ease;
       pointer-events: none;
+      /* 대기 상태: 아래에서 준비 */
+      transform: translateY(100%);
+      opacity: 0;
+      transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity   0.42s cubic-bezier(0.4, 0, 0.2, 1);
     }
+    /* 화면에 표시 중 */
     .rolling-msg.active {
+      transform: translateY(0);
       opacity: 1;
+    }
+    /* 위로 사라지는 중 */
+    .rolling-msg.leaving {
+      transform: translateY(-100%);
+      opacity: 0;
     }
 
     /* ── sequential dots ── */
@@ -625,21 +639,34 @@
       var msgs    = document.querySelectorAll('.rolling-msg');
       var current = 0;
       var DISPLAY = 3000;
-      var FADE    = 500;
+      var TRANS   = 420;
 
       function roll() {
-        msgs[current].classList.remove('active');
+        var leaving = msgs[current];
         current = (current + 1) % msgs.length;
+        var next = msgs[current];
 
-        /* 점 애니메이션 리셋: 텍스트 등장 시 항상 처음부터 재생 */
-        msgs[current].querySelectorAll('.dot').forEach(function (d) {
+        /* 현재 텍스트: 위로 슬라이드 아웃 */
+        leaving.classList.remove('active');
+        leaving.classList.add('leaving');
+
+        /* 다음 텍스트: 아래서 위로 슬라이드 인 */
+        next.querySelectorAll('.dot').forEach(function (d) {
           d.style.animation = 'none';
           d.offsetHeight;
           d.style.animation = '';
         });
+        next.classList.add('active');
 
-        msgs[current].classList.add('active');
-        setTimeout(roll, DISPLAY + FADE);
+        /* leaving 클래스 제거 후 초기 위치로 리셋 (transition 없이) */
+        setTimeout(function () {
+          leaving.classList.remove('leaving');
+          leaving.style.transition = 'none';
+          leaving.offsetHeight;           /* reflow */
+          leaving.style.transition = '';
+        }, TRANS + 50);
+
+        setTimeout(roll, DISPLAY);
       }
 
       setTimeout(roll, DISPLAY);
