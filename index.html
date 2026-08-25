@@ -570,16 +570,13 @@
   <style>
     /* ── rolling text: 위로 슬라이드 ticker ── */
     .rolling-text-wrapper {
-      position: relative;
+      display: grid;       /* 자식들이 너비를 결정하도록 grid 유지 */
       overflow: hidden;
       height: 20px;
-      display: flex;
       align-items: center;
     }
     .rolling-msg {
-      position: absolute;
-      top: 0;
-      left: 0;
+      grid-area: 1 / 1;    /* 모든 항목이 같은 셀에 겹침 */
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -590,11 +587,11 @@
       color: #595959;
       line-height: 20px;
       pointer-events: none;
-      /* 대기 상태: 아래에서 준비 */
-      transform: translateY(100%);
+      /* 대기: 아래에 숨김 */
+      transform: translateY(110%);
       opacity: 0;
       transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1),
-                  opacity   0.42s cubic-bezier(0.4, 0, 0.2, 1);
+                  opacity   0.3s  ease;
     }
     /* 화면에 표시 중 */
     .rolling-msg.active {
@@ -603,7 +600,7 @@
     }
     /* 위로 사라지는 중 */
     .rolling-msg.leaving {
-      transform: translateY(-100%);
+      transform: translateY(-110%);
       opacity: 0;
     }
 
@@ -658,13 +655,15 @@
         });
         next.classList.add('active');
 
-        /* leaving 클래스 제거 후 초기 위치로 리셋 (transition 없이) */
-        setTimeout(function () {
-          leaving.classList.remove('leaving');
+        /* transitionend 후 leaving 리셋 — flicker 없이 아래로 순간이동 */
+        leaving.addEventListener('transitionend', function onDone(e) {
+          if (e.propertyName !== 'transform') return;
+          leaving.removeEventListener('transitionend', onDone);
           leaving.style.transition = 'none';
-          leaving.offsetHeight;           /* reflow */
-          leaving.style.transition = '';
-        }, TRANS + 50);
+          leaving.classList.remove('leaving'); /* translateY(110%) 로 점프 */
+          leaving.offsetHeight;               /* reflow 강제 */
+          leaving.style.transition = '';      /* 다음 번 transition 복구 */
+        });
 
         setTimeout(roll, DISPLAY);
       }
